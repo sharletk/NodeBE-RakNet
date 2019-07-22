@@ -1,0 +1,28 @@
+{
+  "name": "nodebe-raknet",
+  "version": "0.0.1",
+  "description": "NodeBE-RakNet, RakNet server and protocols written for NodeBE (MC:BE Server Software) in node.js.",
+  "main": "./src/NodeBERakNet.js",
+  "dependencies": {
+    "nodebe-binarystream": "^0.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sharletp/NodeBE-RakNet.git"
+  },
+  "keywords": [
+    "nodebe",
+    "raknet",
+    "nodejs"
+  ],
+  "author": "SharletP",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/sharletp/NodeBE-RakNet/issues"
+  },
+  "homepage": "https://github.com/sharletp/NodeBE-RakNet#readme"
+}

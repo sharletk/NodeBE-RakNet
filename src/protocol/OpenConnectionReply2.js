@@ -19,7 +19,7 @@ class OpenConnectionReply2 extends OfflineMessage {
   encodePayload() {
     this.writeMagic();
     this.writeLong(this.serverID);
-    //Address
+    this.writeAddress(this.clientAddress);
     this.writeShort(this.mtuSize);
     this.writeByte(this.serverSecurity ? 1 : 0);
   }
@@ -27,7 +27,7 @@ class OpenConnectionReply2 extends OfflineMessage {
   decodePayload() {
     this.readMagic();
     this.serverID = this.readLong();
-    //Address
+    this.clientAddress = this.readAddress();
     this.mtuSize = this.readShort();
     this.serverSecurity = this.readByte() !== 0;
   }

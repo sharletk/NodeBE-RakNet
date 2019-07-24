@@ -17,14 +17,14 @@ class OpenConnectionRequest2 extends OfflineMessage {
   
   encodePayload() {
     this.writeMagic();
-    //Address
+    this.writeAddress(this.serverAddress);
     this.writeShort(this.mtuSize);
     this.writeLong(this.clientID);
   }
   
   decodePayload() {
     this.readMagic();
-    //Address
+    this.serverAddress = this.readAddress();
     this.mtuSize = this.readShort();
     this.clientID = this.readLong();
   }

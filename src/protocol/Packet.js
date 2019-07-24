@@ -7,7 +7,7 @@ class Packet extends BinaryStream {
     super();
     
     this.version;
-    this.address;
+    this.addr;
     this.port;
     
     this.sendTime;
@@ -55,6 +55,62 @@ class Packet extends BinaryStream {
   }
   
   decodePayload() {}
+  
+  readAddress() {
+    this.version = this.readByte();
+    switch(this.version) {
+      case 4:
+      this.addr = ((~this.readByte() & 0xff)) + "." + ((~this.readByte() & 0xff)) + "." + ((~this.readByte() & 0xff)) + "." + ((~this.readByte() & 0xff));
+      
+      this.port = this.readShort();      
+      return this;
+      
+      break;
+      
+      case 6:
+      this.readLShort();
+      this.port = this.readShort();
+      this.readInt();
+      this.addr = this.readData(16);
+      this.readInt();
+      return this;
+      
+      break;
+      
+      default:
+      return `Error: Unknown IP Address of version ${this.version}`;
+    }
+  }
+  
+  writeAddress(address = {}) {
+    this.writeByte(address.version);
+    switch(address.version) {
+      case 4:
+      let parts = address.ip.split(".", 4);
+      if(parts.length !== 4) return `Error: Wrong number of parts in IPv4 IP, expected 4, got ${parts.length}`;
+      let b;
+      for(b in parts) {
+        this.writeByte((Number(b)) & 0xff);
+      }
+      this.writeShort(address.port);
+      return this;
+      
+      break;
+      
+      case 6:
+      this.writeLShort()//
+      this.writeShort(address.port);
+      this.writeInt(0);
+      this.writeData()//
+      this.writeInt(0);
+      return this;
+      
+      break;
+      
+      default:
+      return `Error: IP version ${address.version} is not supported.`;
+    }
+  }
 }
 
 module.exports = Packet;

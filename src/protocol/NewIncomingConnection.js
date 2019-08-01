@@ -23,7 +23,7 @@ class NewIncomingConnection extends Packet {
     for (address in this.systemAddress) {
       this.writeAddress(address);
     }
-    this.writeLong(this sendPingTime);
+    this.writeLong(this.sendPingTime);
     this.writeLong(this.sendPongTime);
   }
   

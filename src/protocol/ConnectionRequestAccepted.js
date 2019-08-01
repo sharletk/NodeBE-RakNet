@@ -1,8 +1,8 @@
 "use strict"
 
-const Packet = require("./Packet");
+const Packet = require("./Packet.js");
 
-const MessageIentifiers = require("./MessageIentifiers.js");
+const MessageIdentifiers = require("./MessageIdentifiers.js");
 
 class ConnectionRequestAccepted extends Packet {
   constructor() {
@@ -28,7 +28,7 @@ class ConnectionRequestAccepted extends Packet {
     dummy.version = 4;
     
     let i;
-    for(i = 0, i < 20; ++i) {
+    for(i = 0; i < 20; ++i) {
       this.writeAddress(this.systemAddress[i] ? dummy : null);
     }
     
@@ -53,7 +53,7 @@ class ConnectionRequestAccepted extends Packet {
     }
     
     this.sendPingTime = this.readLong();
-    this sendPongTime = this.readLong();
+    this.sendPongTime = this.readLong();
   }
 }
 

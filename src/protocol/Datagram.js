@@ -27,9 +27,10 @@ class Datagram extends EncapsulatedPacket {
     super.clean;
   }
   
-  length() {
+  __length() {
     let length = 4;
     for(packet in this.packets) {
+      console.log(length);
       length += packet instanceof EncapsulatedPacket ? packet.getTotalLength() : packet.length;
     }
   }

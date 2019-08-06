@@ -86,7 +86,7 @@ class RakNetServer {
       this.socket = new Socket(this.address);
       this.sessionManager = new SessionManager(this, this.socket, this.maxMtuSize);
       
-      this.manager.run();
+      this.sessionManager.run();
     } catch(err) {
       console.error(err);
     }

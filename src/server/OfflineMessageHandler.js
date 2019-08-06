@@ -21,7 +21,7 @@ class OfflineMessageHandler {
   }
   
   handleRaw(payload, address) {
-    if (payload.buffer === "") return false; //FETCH VALUES IN BUFFER.
+    if (payload.buffer.toString() === "") return false;
     
     let pk = this.getPacketFromPool(payload);
     

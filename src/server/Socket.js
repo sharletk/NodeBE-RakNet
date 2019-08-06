@@ -8,15 +8,18 @@ class Socket {
     
     this.socket = dgram.createSocket(this.bindAddress.version === 4 ? "udp4" : "udp6");
     
-    if(this.socket.bind({
+    this.socket.bind({
       ip: this.bindAddress.ip,
       port: this.bindAddress.port,
       exclusive: this.bindAddress.exclusive === true ? true : false
-    }) === true) {
-      this.setSendBuffer(1024 * 1024 * 8).setRecvBuffer(1024 * 1024 * 8);
-    } else {
-      throw new Error(`Error: Unable to bind on socket ${bindAddress.ip}:${bindAddress.port}[v${bindAddress.version}], make sure the given dataset is correct`);
-    }
+    });
+    
+    this.socket.ready = false;
+    
+    this.socket.on("listening", () => {
+      this.socket.ready = true;
+      this.run();
+    });
   }
   
   registerListener(obj) {
@@ -55,6 +58,15 @@ class Socket {
   
   setRecvBuffer(size) {
     return this.socket.setRecvBufferSize(size);
+  }
+  
+  run() {
+    if (this.socket.ready === true) {
+      this.setSendBuffer(1024 * 1024 * 8);
+      this.setRecvBuffer(1024 * 1024 * 8);
+    } else {
+      throw new Error(`Unable to bind on socket ${this.bindAddress.ip}:${this.bindAddress.port} [v${this.bindAddress.version}], make sure the given dataset is correct`);
+    }
   }
 }
 

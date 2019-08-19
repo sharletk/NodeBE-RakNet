@@ -5,7 +5,7 @@ const BinaryStream = require("nodebe-binarystream");
 const EncapsulatedPacket = require("../protocol/EncapsulatedPacket.js");
 const ITCProtocol = require("./ITCProtocol.js");
 
-const RakNet = require("../../RakNet.js");
+const RakNet = require("../NodeBERakNet.js");
 
 class ServerHandler {
   constructor(server, instance, binarystream) {
@@ -48,7 +48,7 @@ class ServerHandler {
   unblockAddress(address) {
     let buffer = String.fromCharCode(ITCProtocol.PACKET_UNBLOCK_ADDRESS) + String.fromCharCode(address.length) + address;
     
-    this->server->pushMainToThreadPacket($buffer)
+    this.server.pushMainToThreadPacket($buffer)
   }
   
   addRawPacketFilter(regex) {
@@ -69,19 +69,20 @@ class ServerHandler {
   }
   
   handlePacket() {
-    if ((let packet = this.server.readThreadToMainPacket()) !== null) {
+    let packet;
+    if ((packet = this.server.readThreadToMainPacket()) !== null) {
       let id = packet[0].charCodeAt();
       let offset = 1;
       if (id === ITCProtocol.PACKET_ENCAPSULATED) {
         let identifier = BinaryStream.readInt(packet.substr(offset, 4));
-        let offset += 4;
+        offset += 4;
         let flagd = packet[offset++].charCodeAt();
         let buffer = packet.substr(offset);
         this.instance.handleEncapsulated(identifier, EncapsulatedPacket.fromInternalBinary(buffer), flags);
       } else if (id === ITCProtocol.PACKET_RAW) {
         let len = packet[offset++].charCodeAt();
         let address = packet.substr(offset, len);
-        let offset += len;
+        offset += len;
         let port = Binary.readShort(packet.substr(offset, 2));
         offset += 2;
         let payload = packet.substr(offset);
@@ -89,12 +90,12 @@ class ServerHandler {
       } else if(id === ITCProtocol.PACKET_SET_OPTION) {
         let len = packet[offset++].charCodeAt();
         let name = packet.substr(offset, len);
-        let offset += len;
+        offset += len;
         let value = packet.substr(offset);
         this.instance.handleOption(name, value);
       } else if (id === ITCProtocol.PACKET_OPEN_SESSION) {
         let identifier = BinaryStream.readInt(packet.substr(offset, 4));
-        let offset += 4;
+        offset += 4;
         let len = packet[offset++].charCodeAt();
         let address = packet.substr(offset, len);
         offset += len;
@@ -104,7 +105,7 @@ class ServerHandler {
         this.instance.openSession(identifier, address, port, clientID);
       } else if (id === ITCProtocol.PACKET_CLOSE_SESSION) {
         let identifier = BinaryStream.readInt(packet.substr(offset, 4));
-        let offset += 4;
+        offset += 4;
         let len = packet[offset++].charCodeAt();
         let reason = packet.substr(offset, len);
         this.instance.closeSession(identifier, reason);
@@ -113,12 +114,12 @@ class ServerHandler {
         this.instance.closeSession(identifier, "Invalid session.");
       } else if (id === ITCProtocol.PACKET_ACK_NOTIFICATION) {
         let identifier = BinaryStream.readInt(packet.substr(offset, 4));
-        let offset += 4;
+        offset += 4;
         let identifierACK = BinaryStream.readInt(packet.substr(offset, 4));
         this.instance.notifyACK(identifier, identifierACK);
       } else if (id === ITCProtocol.PACKET_REPORT_PING) {
         let identifier = BinaryStream.readInt(packet.substr(offset, 4));
-        let offset += 4;
+        offset += 4;
         let pingMS = BinaryStream.readInt(packet.substr(offset, 4));
         this.instance.updatePing(identifier, pingMS);
       }

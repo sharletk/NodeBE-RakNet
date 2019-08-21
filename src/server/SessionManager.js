@@ -61,6 +61,11 @@ class SessionManager {
     
     this.nextSessionId = 0;
     
+    this.socket.getSocket().on("listening", () => {
+      let address = this.socket.getSocket().address();
+      this.getLogger().log(`RakNetServer listening on ${address.address}:${address.port}`);
+    })
+    
     this.socket.getSocket().on("message", (msg, rinfo) => {
         this.getLogger().log(`MSG: ${msg} \n RINFO: ${JSON.stringify(rinfo)}`);
         
@@ -68,6 +73,11 @@ class SessionManager {
         
         this.socket.msg = msg;
         this.socket.rinfo = rinfo;
+    });
+    
+    this.socket.getSocket().on("error", (err) => {
+      this.getLogger().error(err.stack);
+      this.socket.getSocket().close();
     });
   }
   

@@ -17,7 +17,8 @@ class OpenConnectionRequest1 extends OfflineMessage {
   
   encodePayload() {
     this.writeMagic();
-    this.writeByte(this.mtuSize);
+    this.writeByte(this.protocol);
+    //this.buffer = str_pad THINGY.
   }
   
   decodePayload() {

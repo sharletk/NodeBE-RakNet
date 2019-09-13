@@ -11,10 +11,12 @@ class Packet extends BinaryStream {
     this.port;
     
     this.sendTime;
+    
+    this.ID = -1;
   }
   
-  static getID() {
-    return -1;
+  getID() {
+    return this.ID;
   }
   
   clean() {
@@ -39,10 +41,12 @@ class Packet extends BinaryStream {
   }
   
   encodeHeader() {
-    this.writeByte(Packet.getID);
+    this.writeByte(this.getID());
   }
   
-  encodePayload() {}
+  encodePayload() {
+    
+  }
   
   decode() {
     this.offset = 0;
@@ -54,7 +58,9 @@ class Packet extends BinaryStream {
     this.readByte();
   }
   
-  decodePayload() {}
+  decodePayload() {
+    
+  }
   
   readAddress() {
     this.version = this.readByte();

@@ -2,13 +2,17 @@
 
 const RakNetServer = require("./server/RakNetServer.js");
 
+const NodeBELogger = require("nodebe-logger");
+
 class NodeBERakNet {
   constructor() {
     this.VERSION = "0.1.0";
     
     this.MIN_NODEJS_VERSION = 8;
     
-    this.DEFAULT_PROTOCOL_VERSION = 6;
+    this.server;
+    
+    this.DEFAULT_PROTOCOL_VERSION = 9;
     
     this.PRIORITY_NORMAL = 0;
     this.PRIORITY_IMMEDIATE = 1;
@@ -16,17 +20,15 @@ class NodeBERakNet {
     this.FLAG_NEED_ACK = 0b00001000;
     
     this.SYSTEM_ADDRESS_COUNT = 20;
-        
-    this.error = 0;
     
     this.ready = false;
-    
-    this.server;
+       
+    this.error = 0;
   }
   
   versionCheck(...args) {     
     if (Number(process.version.slice(1).split(".")[0]) < this.MIN_NODEJS_VERSION) {
-      new logger().error("NodeBE-RakNet requires a node of 8.0.0 or higher, please update it on your system.");
+      new NodeBELogger().error(`NodeBE-RakNet requires a node of ${this.MIN_NODEJS_VERSION} or higher, please update it on your system.`);
       ++this.error;
     }
   }

@@ -13,19 +13,19 @@ class UnconnectedPong extends OfflineMessage {
     this.sendPingTime;
     
     this.serverName;
-    this.serverID;
+    this.serverId;
   }
   
   encodePayload() {
     this.writeLong(this.sendPingTime);
-    this.writeLong(this.serverID);    
+    this.writeLong(this.serverId);    
     this.writeMagic();    
     this.writeString(this.serverName);
   }
   
   decodePayload() {
     this.sendPingTime = this.readLong();
-    this.serverID = this.readLong();
+    this.serverId = this.readLong();
     this.readMagic();
     this.serverName = this.readString().toString("utf8");
   }

@@ -16,10 +16,11 @@ class OfflineMessage extends Packet {
   }
   
   writeMagic() {
-    this.writeData(this.MAGIC);
+    this._append(Buffer.from(this.MAGIC, "binary"));
   }
   
   isValid() {
+    return Buffer.from(this.magic).equals(Buffer.from(this.MAGIC, "binary"));
   }
 }
 

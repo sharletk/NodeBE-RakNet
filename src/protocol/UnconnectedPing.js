@@ -11,19 +11,19 @@ class UnconnectedPing extends OfflineMessage {
     this.ID = MessageIdentifiers.ID_UNCONNECTED_PING;
     
     this.sendPingTime;
-    this.clientID;
+    this.clientId;
   }
   
   encodePayload() {
     this.writeLong(this.sendPingTime);
     this.writeMagic();
-    this.writeLong(this.clientID);
+    this.writeLong(this.clientId);
   }
   
   decodePayload() {
     this.sendPingTime = this.readLong();
     this.readMagic();
-    this.clientID = this.readLong();
+    this.clientId = this.readLong();
   }
 }
 

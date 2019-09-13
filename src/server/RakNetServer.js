@@ -4,7 +4,7 @@ const Socket = require("./Socket.js");
 const SessionManager = require("./SessionManager.js");
 
 class RakNetServer {
-  constructor(logger, address, maxMtuSize, overrideProtocolVersion, sleeper) {
+  constructor(logger, address, maxMtuSize, overrideProtocolVersion) {
     this.address = address;
     
     this.logger = logger;
@@ -19,9 +19,7 @@ class RakNetServer {
     
     this.serverId = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + 1;   
     this.maxMtuSize = maxMtuSize || 1429;    
-    this.protocolVersion = overrideProtocolVersion ? 9 : null;
-    
-    this.mainThreadNotifier = sleeper;
+    this.protocolVersion = overrideProtocolVersion ? overrideProtocolVersion : 9;
     
     this.socket;
     this.sessionManager;
@@ -65,9 +63,6 @@ class RakNetServer {
   
   pushThreadToMainPacket(str) {
     this.externalQueue.push(str);
-    /*if(this.mainThreadNotifier !== null) {
-      this.mainThreadNotifier.wakeupSleeper();
-    }*/
   }
   
   readThreadToMainPacket() {

@@ -69,8 +69,8 @@ class ServerHandler {
   }
   
   handlePacket() {
-    let packet;
-    if ((packet = this.server.readThreadToMainPacket()) !== null) {
+    let packet = this.server.readThreadToMainPacket();
+    if (packet !== null && typeof packet !== "undefined") {
       let id = packet[0].charCodeAt();
       let offset = 1;
       if (id === ITCProtocol.PACKET_ENCAPSULATED) {

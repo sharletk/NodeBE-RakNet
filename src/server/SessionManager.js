@@ -1,6 +1,6 @@
-"use strict"
+"use strict";
 
-const BinaryStream = require("nodebe-binarystream");
+const binarystream = require("nodebe-binarystream");
 
 const Packet = require("../protocol/Packet.js");
 const EncapsulatedPacket = require("../protocol/EncapsulatedPacket.js");
@@ -16,8 +16,6 @@ const RakNet = require("../NodeBERakNet.js");
 
 const Session = require("./Session.js");
 
-const Methods = require("nodebe-methods");
-
 class SessionManager {
   constructor(server, socket, maxMtuSize) {
     this.RAKNET_TPS = 100;
@@ -26,13 +24,13 @@ class SessionManager {
     this.server = server;
     this.socket = socket;
     
-    this.binarystream = new BinaryStream();
+    this.binarystream = new binarystream();
     
     this.maxMtuSize = maxMtuSize;
     
     this.startTimeMS = Date.now();
     
-    this.offlineMessageHandler = new OfflineMessageHandler(this, this.binarystream);
+    this.offlineMessageHandler = new OfflineMessageHandler(this);
     
     this.reuseableAddress = this.socket.getBindAddress();
     
@@ -43,7 +41,29 @@ class SessionManager {
     
     this.sessions = new Map();
     
-    this.name = "";
+    this.name = [
+      "MCPE",
+      "NODEBE TEST SERVER",
+      361,
+      "1.12.0",
+      0,
+      20,
+      this.getID(),
+      "NODEBE TEST SERVER",
+      "SURVIVAL"
+    ].join(";") + ";";
+      
+      /*[
+            "MCPE",
+            this.motd,
+            this.protocol,
+            this.version,
+            this.players.online,
+            this.players.max,
+            this.serverId,
+            this.name,
+            this.gamemode
+        ]*/  
     
     this.packetLimit = 200;
     
@@ -68,8 +88,6 @@ class SessionManager {
     
     this.socket.getSocket().on("message", (msg, rinfo) => {
         this.getLogger().log(`MSG: ${msg} \n RINFO: ${JSON.stringify(rinfo)}`);
-        
-        this.binarystream.writeData(msg);
         
         this.socket.msg = msg;
         this.socket.rinfo = rinfo;
@@ -113,14 +131,12 @@ class SessionManager {
         let start = Date.now();
         
         let i;
-        let stream;
-        let socket;
         
-        for (stream = true, i = 0; i < 100 && stream && !this.shutdown; ++i) {
+        for (let stream = true, i = 0; i < 100 && stream && !this.shutdown; ++i) {
           stream = this.recieveStream();
         }
         
-        for (socket = true, i = 0; i < 100 && socket && !this.shutdown; ++i) {
+        for (let socket = true, i = 0; i < 100 && socket && !this.shutdown; ++i) {
           socket = this.recievePacket();
         }
         
@@ -133,7 +149,7 @@ class SessionManager {
   
   tick() {
     let time = Date.now();
-    for (let session of this.sessions.keys()) {
+    for (let session in this.sessions.keys()) {
       if (this.sessions.size > 1) {
         console.log(this.sessions.size)
         session.update(time);
@@ -174,14 +190,32 @@ class SessionManager {
   }
   
   recievePacket() {
-    let address = this.reuseableAddress;
+    let msg = this.socket.msg;
+    
+    if (typeof msg !== "undefined") {
+      this.binarystream.writeData(msg);
+      this.socket.msg = undefined;
+    } else {
+      this.binarystream.reset();
+    }
+    
+    if (typeof msg !== "undefined" && msg.length !== 33) {
+      console.log(msg);
+    }
+       
     let stream = this.binarystream;
+    
+    let address = this.socket.rinfo;
+    if (typeof address === "object" && typeof address.address !== "undefined") {
+      address.ip = address.address;
+      address.version = Number(address.family.replace("IPv", ""));
+    } else {
+      address = this.reuseableAddress;
+    }
     
     let len = stream.buffer.length;
     
-    /*if (len === false) {
-      //implement error thingy.
-    }*/
+    stream.pid = stream.getBuffer()[0];
     
     this.recieveBytes += len;
     
@@ -196,42 +230,51 @@ class SessionManager {
       this.ipSec.set[address.ip, 1];
     }
     
-    if (len < 1) return true;
+    if (len < 1) return;
     
     try {
-      let session = this.getSessionByAddress(address);
+      let session = this.getSessionByAddress(address.ip);
       
       if (session !== null) {
-        let header = stream.readByte();
+        let header = stream.pid;
         if ((header & Datagram.BITFLAG_VALID) !== 0) {
+          console.log("VALID HEAD");
           if (header & Datagram.BITFLAG_ACK) {
+            console.log("VALID ACK");
             session.handlePacket(new ACK(buffer));
           } else if (header & Datagram.BITFLAG_NAK) {
+            console.log("VALID NAK");
             session.handlePacket(new NACK(buffer));
           } else {
+            console.log("VALID DGRAM");
             session.handlePacket(new Datagram(buffer));
           }
         } else {
-          this.getLogger().debug(`Ignored unconnected packet from ${address} due to session already opened (${stream.toHex(stream.readByte)})`);
+          this.getLogger().debug(`Ignored unconnected packet from ${address.ip}:${address.port} [v${address.version}] due to session already opened (0x${stream.pid})`);
         }
       } else if (this.offlineMessageHandler.handleRaw(stream, address)) {
         let handled = false;
-        for (pattern of this.rawPacketFilters) {
-          if (preg_match(pattern, stream) > 0) {
-            let handled = true;
+        
+        for (pattern in this.rawPacketFilters) {
+          console.log(pattern);
+          let regexpStream = new RegExp(stream);
+          if (regexpStream.match(pattern)) {
+            handled = true;
             this.streamRaw(address, stream);
             break;
           }
         }
         
         if (!handled) {
-          this.getLogger().debug(`Ignored packet from ${address} due to no session opened (${stream.readByte()})`);
+          this.getLogger().debug(`Ignored packet from ${address.ip}:${address.port} [v${address.version}] due to no session opened (0x${stream.pid})`);
         }
       }
     } catch (error) {
       this.getLogger().error(error);
       // IMPLEMENT A PROPER ERROR SYSTEM.
       
+      console.log(this.binarystream);
+      process.exit(1);
       this.blockAddress(address.ip, 5);
     }
     
@@ -239,8 +282,17 @@ class SessionManager {
   }
   
   sendPacket(packet, address) {
-    packet.encode;
-    this.sendBytes += this.socket.writePacket(packet.getBuffer(), address.ip, address.port);
+    console.log("Send Packet:");
+    console.log(packet);
+    packet.encode();
+    console.log("Send Encoded Packet:");
+    console.log(packet);
+    
+    try {
+      this.sendBytes += this.socket.writePacket(packet.getBuffer(), address.ip, address.port);
+    } catch (error) {
+      this.getLogger().debug(error);
+    }
   }
   
   streamEncapsulated(session, packet, flags = RakNet.PRIORITY_NORMAL) {
@@ -284,8 +336,7 @@ class SessionManager {
   }
   
   streamOption(name, value) {
-    let buffer = String.fromCharCode(ITCProtocol.PACKET_SET_OPTION) + String.fromCharCode(name.length) + name + value;
-    
+    let buffer = String.fromCharCode(ITCProtocol.PACKET_SET_OPTION) + String.fromCharCode(name.length) + name + JSON.stringify(value);    
     this.server.pushThreadToMainPacket(buffer);
   } 
   
@@ -296,7 +347,9 @@ class SessionManager {
   }
   
   recieveStream() {
-    let packet = this.server.readMainToThreadPacket();;
+    if (typeof this.binarystream === "undefined") return;
+    
+    let packet = this.server.readMainToThreadPacket();
     if(packet !== null) {
       let id = 0;
       let offset = this.binarystream.offset;
@@ -316,20 +369,25 @@ class SessionManager {
         let len = packet[offset++].charCodeAt();
         let address = packet.substring(offset, len);
         offset += len;
-        let port = this.BinaryStream.readShort(packet.substring(offset, 2));
+        let port = this.binarystream.readShort(packet.substring(offset, 2));
         offset += 2;
-        let payload = substr($packet, $offset);
-        this.socket.writePacket(payload, address, port)
+        let payload = String.prototype.substring($packet, $offset);
+        
+        try {
+          this.socket.writePacket(payload, address, port)
+        } catch (error) {
+          this.getLogger().debug(error);
+        }
       } else if (id === ITCProtocol.PACKET_CLOSE_SESSION) {
-        let identifier = this.BinaryStream.readInt(packet.substring(offset, 4));
-        if (Methods.Isset(this.sessions.get(identifier))) {
+        let identifier = this.binarystream.readInt(packet.substring(offset, 4));
+        if (this.sessions.has(identifier)) {
           this.sessions.get(identifier).flagForDisconnection();
         } else {
           this.streamInvalid(identifier);
         }
       } else if (id === ITCProtocol.PACKET_INVALID_SESSION) {
-        let identifier = this.BinaryStream.readInt(packet.substring(offset, 4));
-        if (Methods.Isset(this.sessions.get(identifier))) {
+        let identifier = this.binarystream.readInt(packet.substring(offset, 4));
+        if (this.sessions.has(identifier)) {
           this.removeSession(this.sessions.get(identifier));
         }
       } else if (id === ITCProtocol.PACKET_SET_OPTION) {
@@ -353,9 +411,9 @@ class SessionManager {
         }
       } else if (id === ITCProtocol.PACKET_BLOCK_ADDRESS) {
         let len = packet[offset++].charCodeAt();
-        let address = paclet.substring(offset, len);
+        let address = packet.substring(offset, len);
         offset += len;
-        let timeout = this.BinaryStream.readInt(packet.substring(offset, 4));
+        let timeout = this.binarystream.readInt(packet.substring(offset, 4));
         this.blockAddress(address, timeout);
       } else if (id === ITCProtocol.PACKET_UNBLOCK_ADDRESS) {
         let len = packet[offset++].charCodeAt();
@@ -407,17 +465,17 @@ class SessionManager {
   }
   
   getSessionByAddress(address) {
-    return this.sessionsByAddress[address.toString()] || null;
+    return this.sessionsByAddress.get(address.toString()) || null;
   }
   
   sessionExists(address) {
-    return Methods.Isset(this.sessionsByAddress.get(address.toString()));
+    return this.sessionsByAddress.has(address.toString());
   }
   
   createSession(address, logger, clientId, mtuSize) {
     this.checkSessions();
     
-    while(Methods.Isset(this.sessions.get(this.nextSessionId))) {
+    while(this.sessions.has(this.nextSessionId)) {
       this.nextSessionId++;
       this.nextSessionId &= 0x7fffffff;
     }
@@ -433,7 +491,7 @@ class SessionManager {
   
   removeSession(session, reason = "unknown") {
     let id = session.getInternalId();
-    if(Methods.Isset(this.sessions.get(id))) {
+    if (this.sessions.has(id)) {
       this.sessions.get(id).close();
       this.removeSessionInternal(session);
       this.streamClose(id, reason);

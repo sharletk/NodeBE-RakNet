@@ -11,19 +11,19 @@ class IncompatibleProtocolVersion extends OfflineMessage {
     this.ID = MessageIdentifiers.ID_INCOMPATIBLE_PROTOCOL_VERSION;
     
     this.protocolVersion;
-    this.serverID;
+    this.serverId;
   }
   
   encodePayload() {
     this.writeByte(this.protocolVersion);
     this.writeMagic();
-    this.writeLong(this.serverID);
+    this.writeLong(this.serverId);
   }
     
   decodePayload() {
     this.protocolVersion = this.readByte();
     this.readMagic();
-    this.serverID = this.readLong();
+    this.serverId = this.readLong();
   }
 }
 
